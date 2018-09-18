@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎页面-X-admin2.0</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi"/>
+    <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="../../css/font.css">
+    <link rel="stylesheet" href="../../css/xadmin.css">
+    <script type="text/javascript" src="../../js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../lib/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../../js/xadmin.js"></script>
+    <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+    <!--[if lt IE 9]>
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+<div class="x-body">
+    <form action="" method="post" class="layui-form layui-form-pane">
+        <div class="layui-form-item">
+            <label for="detail" class="layui-form-label">
+                <span class="x-red">*</span>角色中文名
+            </label>
+            <div class="layui-input-inline">
+                <input type="text" id="detail" name="detail" autocomplete="off" class="layui-input" disabled>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label for="name" class="layui-form-label">
+                <span class="x-red">*</span>角色名
+            </label>
+            <div class="layui-input-inline">
+                <input type="text" id="name" name="name" autocomplete="off" class="layui-input" disabled>
+            </div>
+        </div>
+
+        <div class="layui-form-item" pane="">
+            <label class="layui-form-label">URL权限</label>
+            <div class="layui-input-block" id="auth-list"></div>
+        </div>
+
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">菜单权限</label>
+
+            <table class="layui-table layui-input-block" id="auth-list-menu">
+                <tr>
+                    <td style="width: 8rem;">
+                        <input type="checkbox" name="like1[write]" lay-skin="primary" title="用户管理">
+                    </td>
+                    <td>
+                        <div class="layui-input-block">
+                            <input name="id[]" lay-skin="primary" type="checkbox" title="用户停用" value="2">
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="layui-form-item" style="display: none">
+            <button class="layui-btn" id="submit-btn" lay-filter="submit" lay-submit>
+                提交
+            </button>
+        </div>
+    </form>
+</div>
+<script>
+    function getUrlParams() {
+        var url = location.search; //获取url中"?"符后的字串
+        var theRequest = new Object();
+        if (url.indexOf("?") != -1) {
+            var str = url.substr(1);
+            strs = str.split("&");
+            for (var i = 0; i < strs.length; i++) {
+                theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+            }
+        }
+        return theRequest;
+    }
+
+
+    function addPowers(resources, form) {
+        let p = $('#auth-list');
+        if (resources.length != 0) {
+            for (let i = 0; i < resources.length; i++) {
+                let obj = $('<input type="checkbox" class="resources" lay-skin="primary" data-id="' + resources[i].id + '" title="' + resources[i].detail + '">');
+                if(resources[i].checked)
+                    obj.prop('checked', true);
+                p.append(obj);
+            }
+        }
+    }
+
+
+    function getMenu(arrs, pid) {
+        let arr = getArrByPid(arrs, pid);
+        for (let i = 0, len = arr.length; i < len; i++) {
+            let childs = getMenu(arrs, arr[i].id);
+            if (childs) {
+                arr[i].childrens = childs;
+            }
+        }
+        return arr;
+    }
+
+    function getPowers(arrs) {
+        let arr = [];
+        for (let i = 0, len = arrs.length; i < len; i++) {
+            if(arrs[i].type == 'url'){
+                arr.push(arrs[i]);
+            }
+        }
+        return arr;
+    }
+
+    function getArrByPid(arrs, pid) {
+        let arr = [];
+        for (let i = 0, len = arrs.length; i < len; i++) {
+            if (arrs[i].pid == pid) {
+                arr.push(arrs[i]);
+        }
+        }
+        return arr;
+    }
+
+    layui.use(['form', 'layer', 'table'], function () {
+        let form = layui.form
+            , layer = layui.layer;
+
+        $.ajax({
+            url: '/roles/findById',
+            type: 'POST',
+            dataType: 'json',
+            async: false,
+            data: {'id': getUrlParams().id},
+            success: function (res) {
+                if (res.header.status == 1000) {
+                    let resources = res.data.resources;
+                    let arrMenu = getMenu(resources, 0);
+                    let tab = $('#auth-list-menu').html('');
+                    for (let i = 0, len = arrMenu.length; i < len; i++) {
+                        let tr = $('<tr>\n' +
+                            '                    <td style="width: 12rem;">\n' +
+                            '                        <input type="checkbox" class="resources" lay-skin="primary" data-id="' + arrMenu[i].id + '" title="' + arrMenu[i].detail + '">\n' +
+                            '                    </td>\n' +
+                            '                    <td>\n' +
+                            '                        <div class="layui-input-block children">\n' +
+                            '                        </div>\n' +
+                            '                    </td>');
+                        if (arrMenu[i].checked === true) {
+                            tr.find('input:checkbox').prop("checked", true);
+                        }
+
+                        let childs = arrMenu[i].childrens;
+                        for (let j = 0; j < childs.length; j++) {
+                            if (childs[j].checked === true)
+                                tr.find('.children').append('<input class="resources" lay-skin="primary" data-id="' + childs[j].id + '" checked type="checkbox" title="' + childs[j].detail + '">');
+                            else
+                                tr.find('.children').append('<input class="resources" lay-skin="primary" data-id="' + childs[j].id + '" type="checkbox" title="' + childs[j].detail + '">');
+                        }
+                        tab.append(tr);
+                    }
+                    addPowers(getPowers(resources), form);
+                    form.render('checkbox');
+
+                    $("#name").val(res.data.name)
+                    $("#detail").val(res.data.detail)
+                } else {
+                    layer.msg(res.header.message, {
+                        icon: 2,
+                        time: 2000
+                    })
+                }
+            }
+        });
+
+
+        form.on('submit(submit)', function (data) {
+            let resources = [];
+            $("input:checkbox[class='resources']:checked").each(function () { // 遍历name=standard的多选框
+                resources.push($(this).attr('data-id'))
+            });
+
+            let params = $('form').serialize();
+            for (let i = 0; i < resources.length; i++) {
+                params += '&resources=' + resources[i];
+            }
+            params += '&id=' + getUrlParams().id;
+            $.ajax({
+                url: '/roles/updatePower',
+                type: 'POST',
+                dataType: 'json',
+                data: params,
+                success: function (res) {
+                    top.editData.submitBack(res);
+                }
+            });
+            return false;
+        });
+
+
+        top.editData.submit = function () {
+            $('#submit-btn').trigger('click');
+        };
+    });
+</script>
+</body>
+
+</html>

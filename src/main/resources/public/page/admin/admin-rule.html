@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎页面-X-admin2.0</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi"/>
+    <link rel="stylesheet" href="../../css/font.css">
+    <link rel="stylesheet" href="../../css/xadmin.css?v=1">
+    <script type="text/javascript" src="../../js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../lib/layui/layui.js"
+            charset="utf-8"></script>
+    <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+    <!--[if lt IE 9]>
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style>
+        body{
+            width: auto;
+            min-height: auto;
+            padding: 1rem;
+        }
+    </style>
+</head>
+
+
+<body>
+<div class="x-nav">
+		<span class="layui-breadcrumb"> <a href="">系统管理</a>
+			<a> <cite>权限管理</cite></a>
+		</span> <a class="layui-btn layui-btn-small"
+                   style="line-height: 1.6em; margin-top: 3px; float: right"
+                   href="javascript:location.replace(location.href);" title="刷新"> <i
+        class="layui-icon layui-icon-refresh" style="line-height: 30px"></i></a>
+</div>
+<div class="x-body">
+    <form class="layui-form" id="layui-fm">
+        <div class="layui-form-item layui-border-bottom">
+            <div class="layui-inline">
+                <input type="text" name="detail" placeholder="请输入权限中文名" autocomplete="off" class="layui-input">
+            </div>
+
+            <div class="layui-inline">
+                <input type="text" name="name" placeholder="请输入权限名" autocomplete="off" class="layui-input">
+            </div>
+            <div class="layui-inline">
+                <input type="text" name="url" placeholder="请输入URL" autocomplete="off" class="layui-input">
+            </div>
+            <div class="layui-inline">
+                <select name="type">
+                    <option value="">权限类型</option>
+                    <option value="menu">菜单</option>
+                    <option value="viewMenu">视图菜单</option>
+                    <option value="url">URL路径</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <button class="layui-btn" lay-submit lay-filter="tool-menu" data-event="add">
+                    <i class="layui-icon layui-icon-add-circle-fine"></i>添加
+                </button>
+            </div>
+            <div class="layui-inline">
+                <button class="layui-btn" lay-submit lay-filter="tool-menu" data-event="batchDel">
+                    <i class="layui-icon layui-icon-add-circle-fine"></i>批量删除
+                </button>
+            </div>
+            <div class="layui-inline">
+                <button class="layui-btn" lay-submit lay-filter="tool-menu" data-event="clear">
+                    <i class="layui-icon layui-icon-delete"></i>清除搜索
+                </button>
+            </div>
+            <div class="layui-inline">
+                <button class="layui-btn" lay-submit lay-filter="tool-menu">
+                    <i class="layui-icon layui-icon-search"></i>搜索
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <table class="layui-hide" id="rule-tab" lay-filter="rule-tab"></table>
+
+    <div id="page" style="text-align: center"></div>
+</div>
+
+<script type="text/html" id="toolBar">
+    {{#  if(d.type == "menu"){ }}
+    <a class="layui-btn layui-btn-xs" lay-event="add" style="background-color: #FFB800">添加子菜单</a>
+    {{#  } else { }}
+    <a class="layui-btn layui-btn-xs" style="background-color: #c2c2c2">添加子菜单</a>
+    {{#  } }}
+    <a class="layui-btn layui-btn-xs" lay-event="update">修改</a>
+    <a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="delete">删除</a>
+</script>
+
+<!--menu,	// 菜单-->
+<!--viewMenu,	// 显示视图的子菜单-->
+<!--url,	// url-->
+<script type="text/html" id="typeTpl">
+    {{#  if(d.type == "menu"){ }}
+    <span>菜单</span>
+    {{#  } else if(d.type == "viewMenu"){ }}
+    <span>视图菜单</span>
+    {{#  } else if(d.type == "url"){ }}
+    <span>URL路径</span>
+    {{#  } }}
+</script>
+
+<script type="text/html" id="nameTpl">
+    {{#  if(!d.name){ }}
+    <span class="layui-btn layui-btn-xs" style="background-color: #c2c2c2;">无数据</span>
+    {{#  } else { }}
+    <span>{{ d.name }}</span>
+    {{#  }  }}
+</script>
+
+<script type="text/html" id="urlTpl">
+    {{#  if(!d.url){ }}
+    <span class="layui-btn layui-btn-xs" style="background-color: #c2c2c2;">无数据</span>
+    {{#  } else { }}
+    <span>{{ d.url }}</span>
+    {{#  }  }}
+</script>
+
+<script type="text/html" id="iconTpl">
+    {{#  if(!d.icon){ }}
+    <span class="layui-btn layui-btn-xs" style="background-color: #c2c2c2;">无图标</span>
+    {{#  } else { }}
+    <i class="iconfont">{{ d.icon }}</i>
+    {{#  }  }}
+</script>
+
+<script>
+    layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'element'], function () {
+        let laypage = layui.laypage //分页
+            , layer = layui.layer //弹层
+            , form = layui.form
+            , table = layui.table
+            , windowObj = {
+            layui: layui,
+            data: {},
+            area: ['28rem', '26rem']
+        };
+        table.name = 'rule-tab';
+
+        table.render({
+            elem: '#' + table.name
+            , url: '/resources/list'
+            , page: true
+            , cols: [[
+                {type: 'checkbox'}
+                , {field: 'id', title: 'ID', width: '5%', sort: true}
+                , {field: 'detail', title: '权限中文名', sort: true}
+                , {field: 'type', title: '权限类型', sort: true, templet: '#typeTpl'}
+                , {field: 'name', title: '权限名', templet: '#nameTpl'}
+                , {field: 'url', title: 'URL路径', sort: true, templet: '#urlTpl'}
+                , {field: 'icon', title: '菜单图标', sort: true, templet: '#iconTpl'}
+                , {fixed: 'right', title: '操作', align: 'center', width: '15%', toolbar: '#toolBar'}
+            ]]
+        });
+
+        table.on('tool('+table.name+')', function (obj) {
+            let data = obj.data
+                , layEvent = obj.event;
+            if (layEvent === 'update') {
+                let obj = top.cloneObj(windowObj);
+                obj.url = 'admin-rule-oper.html';
+                obj.title = '权限修改';
+                obj.btns = ['确认修改', '关闭'];
+                obj.data = data;
+                top.openWindow(obj);
+            } else if (layEvent === 'delete') {
+                layer.confirm('确认要删除吗？', function (index) {
+                    top.ajaxSend({
+                        layui: layui,
+                        type: 'post',
+                        url: top.config.urlBase + "/resources/delete",
+                        data: {ids: data.id}
+                    });
+                });
+            } else if (layEvent === 'add') {
+                let obj = top.cloneObj(windowObj);
+                obj.url = 'admin-rule-oper.html';
+                obj.title = '添加子菜单';
+                obj.btns = ['确认添加', '关闭'];
+                obj.data = {pid: data.id, type: 'viewMenu'};
+                top.openWindow(obj);
+            }
+        });
+
+        form.on('submit(tool-menu)', function (data) {
+            let field = data.field;
+            let event = $(data.elem).data('event');
+            let fm = data.form;
+            if (event == 'clear') {
+                top.cleanForm(fm, form);
+                top.tableReload(table);
+            }else if(event == 'add'){
+                let obj = top.cloneObj(windowObj);
+                obj.url = 'admin-rule-oper.html';
+                obj.title = '权限添加';
+                obj.btns = ['确认添加', '关闭'];
+                obj.data = {};
+                top.openWindow(obj);
+            } else if (event == 'batchDel') {
+                let ids = top.getTabChecked(table, layer, '请选择你要删除的项目!');
+                if (!ids)
+                    return false;
+                layer.confirm('确认批量删除吗？', function () {
+                    top.ajaxSend({
+                        layui: layui,
+                        type: 'post',
+                        url: top.config.urlBase + "/resources/delete",
+                        data: {ids: ids}
+                    });
+                });
+            } else {
+                top.tableReload(table, field);
+            }
+            return false;
+        });
+    });
+</script>
+</body>
+
+</html>

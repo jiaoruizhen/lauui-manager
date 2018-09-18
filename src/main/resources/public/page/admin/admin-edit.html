@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎页面-X-admin2.0</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi"/>
+    <link rel="stylesheet" href="../../css/font.css">
+    <link rel="stylesheet" href="../../css/xadmin.css">
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="../../lib/layui/layui.js" charset="utf-8"></script>
+    <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+    <!--[if lt IE 9]>
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style>
+        .layui-form-switch {
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="x-body">
+    <form class="layui-form" lay-filter="fm">
+        <input type="hidden" id="id" name="id">
+
+        <div class="layui-form-item">
+            <label for="username" class="layui-form-label">
+                <span class="x-red">*</span>用户名:
+            </label>
+            <div class="layui-input-inline">
+                <input type="text" id="username" name="username" required="" lay-verify="required"
+                       autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label for="email" class="layui-form-label">
+                <span class="x-red">*</span>邮箱:
+            </label>
+            <div class="layui-input-inline">
+                <input type="text" id="email" name="email" required="" lay-verify="required"
+                       autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label for="mobile" class="layui-form-label">
+                <span class="x-red">*</span>手机号:
+            </label>
+            <div class="layui-input-inline">
+                <input type="text" id="mobile" name="mobile" required="" lay-verify="required"
+                       autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label for="name" class="layui-form-label">
+                <span class="x-red">*</span>昵称:
+            </label>
+            <div class="layui-input-inline">
+                <input type="text" id="name" name="name" required="" lay-verify="required"
+                       autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+
+        <div class="layui-form-item" pane="">
+            <label class="layui-form-label">角色分配: </label>
+            <div class="layui-input-block" id="auth-list">
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+    function addRole(role, form) {
+        let p = $('#auth-list');
+        if (role.length != 0) {
+            for (let i = 0; i < role.length; i++) {
+                let obj = $('<input type="checkbox" class="role" lay-skin="primary" data-id="' + role[i].id + '" title="' + role[i].detail + '">');
+                if(role[i].checked)
+                    obj.prop('checked', true);
+                p.append(obj);
+            }
+        }
+    }
+
+    layui.use(['form', 'layer'], function () {
+        let form = layui.form
+            , layer = layui.layer
+            , topObj = top.editData;
+
+        form.val('fm', top.cloneObj(topObj, {}));
+
+        top.ajaxSend({
+            layui: layui,
+            type: 'post',
+            url: top.config.urlBase + "/users/findById",
+            async: false,
+            data: {'id': topObj.id},
+            success: function (res) {
+                if (res.header.status == 1000) {
+                    let roles = res.data.roles;
+                    addRole(roles, form);
+                    form.render('checkbox');
+                } else {
+                    layer.msg(res.header.message, {
+                        icon: 2,
+                        time: 2000
+                    })
+                }
+            }
+        });
+
+
+        topObj.submit = function () {
+            let roles = [];
+            $("input:checkbox[class='role']:checked").each(function () {
+                roles.push($(this).attr('data-id'))
+            });
+
+            let params = $('form').serialize();
+            for (let i = 0; i < roles.length; i++) {
+                params += '&roles=' + roles[i];
+            }
+            params += '&id=' + topObj.id;
+
+            let url = topObj.id ? top.config.urlBase + "/users/update" : top.config.urlBase + "/users/add";
+            top.ajaxSend({
+                layui: layui,
+                type: 'post',
+                url: url,
+                data: params,
+                success: function (res) {
+                    topObj.submitBack(res);
+                }
+            });
+        };
+    });
+</script>
+</body>
+
+</html>

@@ -1,0 +1,12 @@
+#spring.datasource.url=jdbc\:mysql\://gz-cdb-qlnuiunf.sql.tencentcdb.com\:62160/device?useUnicode=true&characterEncoding=utf-8&useSSL=false
+#spring.datasource.password=imworkDogness6789
+
+spring:
+  datasource:
+    url: jdbc:mysql://193.112.126.100:3306/sim_manager?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    password: Dogness_ct2
+  redis:
+    host: petnet.imwork.net
+    password: 123456
+    port: 6379
+    database: 3
